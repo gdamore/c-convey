@@ -1,0 +1,11 @@
+C Convey Testing Framework
+==========================
+
+Inspired by the excellent
+https://github.com/smartystreets/goconvey/convey[GoConvey] framework,
+we have endeavored to create a similar framework for C programmers.
+This work was done in support of testing for a rewrite of
+https://github.com/nanomsg/nanomsg[nanomsg].
+
+This work is very preliminary at this point, and subject to change
+frequently.  More documentation will be forthcoming.

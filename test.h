@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
@@ -30,7 +29,6 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <stdarg.h>
-#include <sys/time.h>
 
 /*
  * This test framework allows one to write tests as a form of assertion,

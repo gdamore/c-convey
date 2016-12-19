@@ -146,6 +146,7 @@ static void log_printf(tlog_t *, const char *, ...);
 static void log_dump(tlog_t *, const char *, const char *);
 static void log_free(tlog_t *);
 static tlog_t *log_alloc(void);
+static char *nextline(char **);
 
 /*
  * print_result prints the test results.  It prints more verbose information
@@ -252,6 +253,7 @@ test_i_start(test_ctx_t *ctx, const char *name)
 		    ((t->t_debuglog = log_alloc()) == NULL)) {
 			goto allocfail;
 		}
+		log_printf(t->t_debuglog, "Test Started: %s", t->t_name);
 	}
 	return (0);
 allocfail:
@@ -631,18 +633,13 @@ static void
 log_dump(tlog_t *log, const char *header, const char *color)
 {
 	char *s;
-#ifdef NO_THREADS
-#define STRTOK(base, sep)		strtok(base, sep)
-#else
-	char *last = NULL;
-#define	STRTOK(base, sep)		strtok_r(base, sep, &last)
-#endif
+	char *last = log->l_buf;
 	if (log->l_length == 0) {
 		return;
 	}
 
 	(void) printf("\n\n%s%s%s\n\n", color, header, color_none);
-	for (s = STRTOK(log->l_buf, "\n"); s != NULL; s = STRTOK(NULL, "\n")) {
+	while ((s = nextline(&last)) != NULL) {
 		(void) printf("  %s%s%s\n", color, s, color_none);
 	}
 }
@@ -778,6 +775,33 @@ init_terminal(void)
 		}
 	}
 #endif
+}
+
+/*
+ * This function exists because strtok isn't safe, and strtok_r and
+ * strsep are not universally available.  Its like strsep, but only does
+ * newlines.  Could be implemented using strpbrk, but this is probably
+ * faster since we are only looking for a single character.
+ */
+static char *
+nextline(char **next)
+{
+	char *line = *next;
+	char *nl;
+	char c;
+
+	if (line == NULL) {
+		return (NULL);
+	}
+	for (nl = line; (c = (*nl)) != '\0'; nl++) {
+		if (c == '\n') {
+			*nl = '\0';
+			*next = nl + 1;
+			return (line);
+		}
+	}
+	*next = NULL;
+	return (line);
 }
 
 int

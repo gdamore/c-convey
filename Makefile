@@ -17,6 +17,5 @@ run_tests:	$(PROGS)
 clean:
 	rm $(PROGS)
 
-$(PROGS):	$(@:%=%.c) test.c
-	$(CC) -o $@ $(@:%=%.c) test.c
-
+convey_test: convey_test.c test.c test.h
+	$(CC) -I. -o $@ convey_test.c test.c

@@ -145,6 +145,9 @@
  * affects the following code, and it is possible to override a prior
  * Reset block with a new one in the same scope.  Unlike with GoConvey,
  * you must put this *before* other Convey blocks you wish to cover.
+ * Note that the Reset code runs *AFTER* proceeding convey blocks are done,
+ * not before -- that means that it won't run immediately prior to the
+ * very next Convey block.
  */
 #define	Reset(code)		test_reset(code)
 

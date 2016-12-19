@@ -42,7 +42,7 @@ Main({
 	 * one more pass all the way through until we bypass that last
 	 * item and can close the outer Convey.
 	 */
-	Test("ConveyOrdering", {
+	Test("Ordering", {
 		/*
 		 * The buffer has to be static because don't want to clear
 		 * it with each new pass -- that would defeat our tests!
@@ -51,33 +51,55 @@ Main({
 		static char buffer[32];
 		static int bufidx;
 
-		Convey("A", { buffer[bufidx++] = 'A'; });
+		Convey("A runs first", { buffer[bufidx++] = 'A'; });
 		buffer[bufidx++] = '1';
 
-		Convey("B", {
+		Convey("B runs after A", {
 
 			So(strlen(buffer) > 0);
 			So(buffer[bufidx-1] == '1');
 			buffer[bufidx++] = 'B';
 
-			Convey("C", {
+			Convey("C runs inside B", {
 				So(buffer[bufidx-1] == 'B');
 				buffer[bufidx++] = 'C';
 			});
 		});
 
-		Convey("D", {
+		Convey("D runs afer A, B, C.", {
 			So(buffer[bufidx-1] == '1');
 			buffer[bufidx++] = 'D';
 		});
 
 		buffer[bufidx++] = '2';
 
-		Convey("E", {
+		Convey("E is last", {
 			So(buffer[bufidx-1] == '2');
 			buffer[bufidx++] = 'E';
 		});
 
 		So(strcmp(buffer, "A1BC1B1D12E12") == 0);
+	});
+
+	Test("Reset", {
+		static int x;
+
+		Convey("Initialize X to a non-zero value", {
+			So(x == 0);
+			x = 1;
+			So(x == 1);
+		});
+
+		Reset({ x = 20; });
+
+		Convey("Verify that reset did not get called", {
+			So(x == 1);
+			x = 5;
+			So(x == 5);
+		});
+
+		Convey("But now it did", {
+			So(x == 20);
+		});
 	});
 })

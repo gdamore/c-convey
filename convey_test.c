@@ -52,6 +52,7 @@ Main({
 		static int bufidx;
 
 		Convey("A runs first", { buffer[bufidx++] = 'A'; });
+		Printf("Bufidx is now %d", 1);
 		buffer[bufidx++] = '1';
 
 		Convey("B runs after A", {

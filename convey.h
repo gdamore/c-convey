@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #ifndef CONVEY_H
@@ -97,9 +84,10 @@ extern int conveyMain(int, char **);
 extern void conveyAssertPass(const char *, const char *, int);
 extern void conveyAssertSkip(const char *, const char *, int);
 extern void conveyAssertFail(const char *, const char *, int);
-extern void conveySkip(const char *, int, const char *);
-extern void conveyFail(const char *, int, const char *);
-extern void conveyError(const char *, int, const char *);
+extern void conveySkip(const char *, int, const char *, ...);
+extern void conveyFail(const char *, int, const char *, ...);
+extern void conveyError(const char *, int, const char *, ...);
+extern void conveyPrintf(const char *, int, const char *, ...);
 
 /*
  * conveyRun is a helper macro not to be called directly by user
@@ -246,9 +234,23 @@ extern void conveyError(const char *, int, const char *);
  * ConveySkip() just stops processing of the rest of the current context,
  * and records that processing was skipped.
  */
+
+/*
+ * If your preprocessor doesn't understand C99 variadics, indicate it
+ * with CONVEY_NO_VARIADICS.  In that case you lose support for printf-style
+ * format specifiers.
+ */
+#ifdef CONVEY_NO_VARIADICS
 #define	ConveySkip(reason)	conveySkip(__FILE__, __LINE__, reason)
 #define	ConveyFail(reason)	conveyFail(__FILE__, __LINE__, reason)
 #define	ConveyError(reason)	conveyError(__FILE__, __LINE__, reason)
+#define	ConveyPrintf(reason)	conveyPrintf(__FILE__, __LINE__, reason)
+#else
+#define	ConveySkip(...)		conveySkip(__FILE__, __LINE__, __VA_ARGS__)
+#define	ConveyFail(...)		conveyFail(__FILE__, __LINE__, __VA_ARGS__)
+#define	ConveyError(...)	conveyError(__FILE__, __LINE__, __VA_ARGS__)
+#define	ConveyPrintf(...)	conveyPrintf(__FILE__, __LINE__, __VA_ARGS__)
+#endif
 
 /*
  * ConveySkipSo() is used to skip processing of a single assertion.
@@ -279,12 +281,6 @@ extern int ConveyInit(void);
  * as the main() wrapper looks at argv, and does if -v is supplied.
  */
 extern void ConveySetVerbose(void);
-
-/*
- * ConveyPrintf() is like printf, but it goes to a test-specific debug log.
- * TBD: Convert this to a macro to pick up __FILE__ and __LINE__.
- */
-extern void ConveyPrintf(const char *, ...);
 
 /*
  * These are some public macros intended to make the API more friendly.

@@ -138,8 +138,8 @@ static int convey_tls_init(void);
 static void *convey_tls_get(void);
 static int convey_tls_set(void *);
 static struct convey_ctx *convey_get_ctx(void);
-static void convey_log_vprintf(struct convey_log *, const char *, va_list);
-static void convey_log_printf(struct convey_log *, const char *, ...);
+static void convey_vlogf(struct convey_log *, const char *, va_list, int);
+static void convey_logf(struct convey_log *, const char *, ...);
 static void convey_log_emit(struct convey_log *, const char *, const char *);
 static void convey_log_free(struct convey_log *);
 static struct convey_log *convey_log_alloc(void);
@@ -165,6 +165,15 @@ convey_print_result(struct convey_ctx *t)
 
 		convey_read_timer(&t->ctx_timer, &secs, &usecs);
 
+		(void) convey_logf(t->ctx_dbglog, "Test %s: %s (%d.%02ds)\n",
+		    t->ctx_fatal ? "FATAL" :
+		    t->ctx_fail ? "FAIL" :
+		    t->ctx_skip ? "PASS (with SKIPs)" :
+		    "PASS", t->ctx_name, secs, usecs / 10000);
+
+		if (convey_verbose) {
+			(void) printf("\n");
+		}
 		convey_log_emit(t->ctx_errlog, "Errors:", convey_red);
 		convey_log_emit(t->ctx_faillog, "Failures:", convey_yellow);
 		if (convey_debug) {
@@ -181,7 +190,7 @@ convey_print_result(struct convey_ctx *t)
 				    "(one or more sections skipped)",
 				    convey_nocolor);
 			}
-			(void) printf("\n\n--- %s: %s (%d.%02d)\n",
+			(void) printf("\n\n--- %s: %s (%d.%02ds)\n",
 			    t->ctx_fatal ? "FATAL" :
 			    t->ctx_fail ? "FAIL" :
 			    "PASS", t->ctx_name, secs, usecs / 10000);
@@ -252,8 +261,8 @@ conveyStart(conveyScope *scope, const char *name)
 		    ((t->ctx_dbglog = convey_log_alloc()) == NULL)) {
 			goto allocfail;
 		}
-		convey_log_printf(t->ctx_dbglog,
-		    "Test Started: %s", t->ctx_name);
+		convey_logf(t->ctx_dbglog,
+		    "Test Started: %s\n", t->ctx_name);
 	}
 	return (0);
 allocfail:
@@ -263,7 +272,6 @@ allocfail:
 		convey_log_free(t->ctx_faillog);
 		free(t);
 		scope->cs_data = NULL;
-		return (1);
 	}
 	if (parent != NULL) {
 		ConveyError("Unable to allocate context");
@@ -345,15 +353,20 @@ conveyFinish(conveyScope *scope, int *rvp)
 }
 
 void
-conveySkip(const char *file, int line, const char *reason)
+conveySkip(const char *file, int line, const char *fmt, ...)
 {
+	va_list ap;
 	struct convey_ctx *t = convey_get_ctx();
+	struct convey_log *dlog = t->ctx_dbglog;
 	if (convey_verbose) {
 		(void) printf("%s%s%s",
 		    convey_yellow, convey_sym_skip, convey_nocolor);
 	}
-	convey_log_printf(t->ctx_dbglog, "* Skipping rest of %s: %s: %d: %s",
-	    t->ctx_name, file, line, reason);
+	convey_logf(dlog, "* %s (%s:%d) (Skip): ",
+	    t->ctx_name, file, line);
+	va_start(ap, fmt);
+	convey_vlogf(dlog, fmt, ap, 1);
+	va_end(ap);
 	t->ctx_done = 1;	/* This forces an end */
 	convey_nskip++;
 	longjmp(*t->ctx_jmp, 1);
@@ -374,13 +387,13 @@ conveyAssertFail(const char *cond, const char *file, int line)
 	convey_assert_color = convey_yellow;
 	t->ctx_fail++;
 	t->ctx_done = 1;	/* This forces an end */
-	convey_log_printf(t->ctx_faillog, "* %s (Assertion Failed)\n",
+	convey_logf(t->ctx_faillog, "* %s (Assertion Failed)\n",
 	    t->ctx_name);
-	convey_log_printf(t->ctx_faillog, "File: %s\n", file);
-	convey_log_printf(t->ctx_faillog, "Line: %d\n", line);
-	convey_log_printf(t->ctx_faillog, "Test: %s\n\n", cond);
-	convey_log_printf(t->ctx_dbglog, "* %s (%s:%d) (FAILED)\n",
-	    t->ctx_name, file, line);
+	convey_logf(t->ctx_faillog, "File: %s\n", file);
+	convey_logf(t->ctx_faillog, "Line: %d\n", line);
+	convey_logf(t->ctx_faillog, "Test: %s\n\n", cond);
+	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (FAILED): %s\n",
+	    t->ctx_name, file, line, cond);
 	longjmp(*t->ctx_jmp, 1);
 }
 
@@ -393,8 +406,8 @@ conveyAssertPass(const char *cond, const char *file, int line)
 		(void) printf("%s%s%s",
 		    convey_green, convey_sym_pass, convey_nocolor);
 	}
-	convey_log_printf(t->ctx_dbglog, "* %s (%s:%d) (Passed)\n",
-	    t->ctx_name, file, line);
+	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Passed): %s\n",
+	    t->ctx_name, file, line, cond);
 }
 
 void
@@ -406,8 +419,8 @@ conveyAssertSkip(const char *cond, const char *file, int line)
 		(void) printf("%s%s%s",
 		    convey_yellow, convey_sym_pass, convey_nocolor);
 	}
-	convey_log_printf(t->ctx_dbglog, "* %s (%s:%d) (SKIPPED)\n",
-	    t->ctx_name, file, line);
+	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Skip): %s\n",
+	    t->ctx_name, file, line, cond);
 }
 
 /*
@@ -601,7 +614,7 @@ convey_get_ctx(void)
  * Log stuff.
  */
 static void
-convey_log_vprintf(struct convey_log *log, const char *fmt, va_list va)
+convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 {
 	/* Grow the log buffer if we need to */
 	while ((log->log_size - log->log_length) < 256) {
@@ -617,20 +630,21 @@ convey_log_vprintf(struct convey_log *log, const char *fmt, va_list va)
 		log->log_size = newsz;
 	}
 
+	/* 2 allows space for NULL, and newline */
 	(void) vsnprintf(log->log_buf + log->log_length,
-	    log->log_size - (log->log_length + 3), fmt, va);
+	    log->log_size - (log->log_length + 2), fmt, va);
 	log->log_length += strlen(log->log_buf + log->log_length);
-	if (log->log_buf[log->log_length-1] != '\n') {
+	if (addnl && log->log_buf[log->log_length-1] != '\n') {
 		log->log_buf[log->log_length++] = '\n';
 	}
 }
 
 static void
-convey_log_printf(struct convey_log *log, const char *fmt, ...)
+convey_logf(struct convey_log *log, const char *fmt, ...)
 {
 	va_list va;
 	va_start(va, fmt);
-	convey_log_vprintf(log, fmt, va);
+	convey_vlogf(log, fmt, va, 0);
 	va_end(va);
 }
 
@@ -692,29 +706,25 @@ ConveySetVerbose(void)
 }
 
 void
-ConveyPrintf(const char *fmt, ...)
+conveyFail(const char *file, int line, const char *fmt, ...)
 {
-	va_list va;
-	struct convey_ctx *ctx = convey_get_ctx()->ctx_root;
+	struct convey_ctx *t = convey_get_ctx();
+	struct convey_log *flog = t->ctx_faillog;
+	struct convey_log *dlog = t->ctx_dbglog;
+	va_list ap;
 
-	va_start(va, fmt);
-	convey_log_vprintf(ctx->ctx_dbglog, fmt, va);
-	va_end(va);
-}
+	convey_logf(dlog, "* %s (%s:%d) (Failed): ", t->ctx_name, file, line);
+	va_start(ap, fmt);
+	convey_vlogf(dlog, fmt, ap, 1);
+	va_end(ap);
 
-void
-conveyFail(const char *file, int line, const char *reason)
-{
-	struct convey_ctx *t = convey_get_ctx()->ctx_root;
-	struct convey_log *faillog = t->ctx_faillog;
-	struct convey_log *debuglog = t->ctx_dbglog;
-
-	convey_log_printf(debuglog, "* %s (%s:%d) (Failed): %s\n",
-	    t->ctx_name, file, line, reason);
-	convey_log_printf(faillog, "* %s\n", t->ctx_name);
-	convey_log_printf(faillog, "File: %s\n", file);
-	convey_log_printf(faillog, "Line: %d\n", line);
-	convey_log_printf(faillog, "Reason: %s\n", reason);
+	convey_logf(flog, "* %s\n", t->ctx_root->ctx_name);
+	convey_logf(flog, "File: %s\n", file);
+	convey_logf(flog, "Line: %d\n", line);
+	convey_logf(flog, "Reason: ");
+	va_start(ap, fmt);
+	convey_vlogf(flog, fmt, ap, 1);
+	va_end(ap);
 
 	if (t->ctx_root != t) {
 		t->ctx_root->ctx_fail++;
@@ -726,18 +736,25 @@ conveyFail(const char *file, int line, const char *reason)
 }
 
 void
-conveyError(const char *file, int line, const char *reason)
+conveyError(const char *file, int line, const char *fmt, ...)
 {
-	struct convey_ctx *t = convey_get_ctx()->ctx_root;
-	struct convey_log *faillog = t->ctx_errlog;
-	struct convey_log *debuglog = t->ctx_dbglog;
+	struct convey_ctx *t = convey_get_ctx();
+	struct convey_log *flog = t->ctx_errlog;
+	struct convey_log *dlog = t->ctx_dbglog;
+	va_list ap;
 
-	convey_log_printf(debuglog, "* %s (%s:%d) (Error): %s\n",
-	    t->ctx_name, file, line, reason);
-	convey_log_printf(faillog, "* %s\n", t->ctx_name);
-	convey_log_printf(faillog, "File: %s\n", file);
-	convey_log_printf(faillog, "Line: %d\n", line);
-	convey_log_printf(faillog, "Reason: %s\n", reason);
+	convey_logf(dlog, "* %s (%s:%d) (Error): ", t->ctx_name, file, line);
+	va_start(ap, fmt);
+	convey_vlogf(dlog, fmt, ap, 1);
+	va_end(ap);
+
+	convey_logf(flog, "* %s\n", t->ctx_root->ctx_name);
+	convey_logf(flog, "File: %s\n", file);
+	convey_logf(flog, "Line: %d\n", line);
+	convey_logf(flog, "Reason: ");
+	va_start(ap, fmt);
+	convey_vlogf(flog, fmt, ap, 1);
+	va_end(ap);
 
 	if (t->ctx_root != t) {
 		t->ctx_root->ctx_fail++;
@@ -746,6 +763,19 @@ conveyError(const char *file, int line, const char *reason)
 	t->ctx_fail++;
 	t->ctx_done = 1;	/* This forces an end */
 	longjmp(*t->ctx_jmp, 1);
+}
+
+void
+conveyPrintf(const char *file, int line, const char *fmt, ...)
+{
+	va_list ap;
+	struct convey_ctx *t = convey_get_ctx();
+	struct convey_log *dlog = t->ctx_dbglog;
+
+	convey_logf(dlog, "* %s (%s:%d) (Debug): ", t->ctx_name, file, line);
+	va_start(ap, fmt);
+	convey_vlogf(dlog, fmt, ap, 1);
+	va_end(ap);
 }
 
 extern int conveyMainImpl(void);
@@ -804,6 +834,13 @@ convey_nextline(char **next)
 			*next = nl + 1;
 			return (line);
 		}
+	}
+	/*
+	 * If the last character in the file is a newline, treat it as
+	 * the end.  (This will appear as a blank last line.)
+	 */
+	if (*line == '\0') {
+		line = NULL;
 	}
 	*next = NULL;
 	return (line);

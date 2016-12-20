@@ -1,0 +1,42 @@
+#
+# Copyright 2016 Garrett D'Amore <garrett@damore.org>
+#
+# This software is supplied under the terms of the MIT License, a
+# copy of which should be located in the distribution where this
+# file was obtained (LICENSE.txt).  A copy of the license may also be
+# found online at https://opensource.org/licenses/MIT.
+#
+
+#
+# Simple Makefile - for UNIX/Linux systems.
+#
+# The way the tests work is that you have to compile both your own .c
+# (containing your test code) and the test.c file that contains the
+# convey framework; you'll also need to have the header files in
+# the same directory, or located on the include search path.
+#
+all:	run_tests
+
+#
+# Uncomment if you don't have pthreads.
+# CDEFS	=	NO_THREADS
+#
+# Comment or change this as you need for pthreads.
+LDLIBS =	-lpthread
+
+CC	=	cc
+CFLAGS	=	-I .
+RM	=	rm -f
+PROG	=	convey_test
+SRCS	=	convey_test.c test.c
+OBJS	=	convey_test.o test.o
+HDRS	=	convey.h test.h
+
+run_tests:	$(PROG)
+	./$(PROG) -v
+
+$(PROG):	$(SRCS) $(HDRS)
+	$(CC) $(CFLAGS) -o $@ $(SRCS) $(LDLIBS)
+
+clean:
+	$(RM) $(PROG) $(OBJS)

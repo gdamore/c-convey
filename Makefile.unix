@@ -17,12 +17,20 @@
 #
 all:	run_tests
 
-#
 # Uncomment if you don't have pthreads.
 # CDEFS	=	CONVEY_NO_THREADS
 #
-# Comment or change this as you need for pthreads.
-LDLIBS =	-lpthread
+# Uncomment to use gettimeofday instead of clock_gettime.
+# CDEFS =	CONVEY_USE_GETTIMEOFDAY
+#
+# Choose one of these as you need for threads or clock_gettime, and assign
+# to LDLIBS.
+# to LDLIBS.
+#
+# LDLIBS_Darwin		= -lpthread
+# LDLIBS_Linux		= -lpthread -lrt
+# LDLIBS_SunOS		= -lpthread -lrt
+# LDLIBS_FreeBSD	= -lpthread
 
 CC	=	cc
 CFLAGS	=	-I .

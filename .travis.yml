@@ -1,3 +1,4 @@
+language: c
 sudo: false
 matrix:
   include:
@@ -8,5 +9,6 @@ matrix:
     - os: osx
       compiler: clang
 script:
-  - make -f Makefile.unix clean
-  - make -f Makefile.unix
+  - ./build.sh clean
+  - ./build.sh build
+  - ./build.sh test

@@ -46,6 +46,7 @@
 #include <locale.h>
 #include <langinfo.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #ifndef CONVEY_NO_THREADS
 #include <pthread.h>
@@ -446,7 +447,7 @@ convey_start_timer(struct convey_timer *pc)
 	QueryPerformanceFrequency(&pfreq);
 	pc->timer_base = pcnt.QuadPart;
 	pc->timer_rate = pfreq.QuadPart;
-#elif defined(CLOCK_MONOTONIC)
+#elif defined(CLOCK_MONOTONIC) && !defined(CONVEY_USE_GETTIMEOFDAY)
 	uint64_t usecs;
 	struct timespec ts;
 
@@ -458,7 +459,7 @@ convey_start_timer(struct convey_timer *pc)
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
-	pc->timer_base = tv.tv_secs * 1000000;
+	pc->timer_base = tv.tv_sec * 1000000;
 	pc->timer_base += tv.tv_usec;
 	pc->timer_rate = 1000000;
 #endif
@@ -476,7 +477,7 @@ convey_stop_timer(struct convey_timer *pc)
 		LARGE_INTEGER pcnt;
 		QueryPerformanceCounter(&pcnt);
 		pc->timer_count += (pcnt.QuadPart - pc->timer_base);
-#elif defined(CLOCK_MONOTONIC)
+#elif defined(CLOCK_MONOTONIC) && !defined(CONVEY_USE_GETTIMEOFDAY)
 		uint64_t ns;
 		struct timespec ts;
 
@@ -489,8 +490,8 @@ convey_stop_timer(struct convey_timer *pc)
 		struct timeval tv;
 
 		gettimeofday(&tv, NULL);
-		us = (ts.tv_sec * 1000000);
-		us += ts.tv_usec;
+		us = (tv.tv_sec * 1000000);
+		us += tv.tv_usec;
 		pc->timer_count += (us - pc->timer_base);
 #endif
 	} while (0);

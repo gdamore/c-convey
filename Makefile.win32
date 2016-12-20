@@ -21,9 +21,9 @@ CC	=	cl
 CFLAGS	=	-I . -D_WIN32
 RM	=	del
 PROG	=	convey_test.exe
-SRCS	=	convey_test.c test.c
-OBJS	=	convey_test.obj test.obj
-HDRS	=	convey.h test.h
+SRCS	=	convey_test.c convey.c
+OBJS	=	convey_test.obj convey.obj
+HDRS	=	convey.h
 
 run_tests:	$(PROG)
 	$(PROG) -v

@@ -19,7 +19,7 @@ all:	run_tests
 
 #
 # Uncomment if you don't have pthreads.
-# CDEFS	=	NO_THREADS
+# CDEFS	=	CONVEY_NO_THREADS
 #
 # Comment or change this as you need for pthreads.
 LDLIBS =	-lpthread
@@ -28,9 +28,9 @@ CC	=	cc
 CFLAGS	=	-I .
 RM	=	rm -f
 PROG	=	convey_test
-SRCS	=	convey_test.c test.c
-OBJS	=	convey_test.o test.o
-HDRS	=	convey.h test.h
+SRCS	=	convey_test.c convey.c
+OBJS	=	convey_test.o convey.o
+HDRS	=	convey.h
 
 run_tests:	$(PROG)
 	./$(PROG) -v

@@ -1,9 +1,9 @@
 C Convey Testing Framework
 ==========================
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/gdamore/c-convey/blob/master/LICENSE.txt)
-[![Linux Status](https://img.shields.io/travis/gdamore/c-convey/master.svg?label=linux)](https://travis-ci.org/gdamore/c-convey)
-[![Windows Status](https://img.shields.io/appveyor/ci/gdamore/c-convey/master.svg?label=windows)](https://ci.appveyor.com/project/gdamore/c-convey)
+image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License,"link=https://github.com/gdamore/c-convey/blob/master/LICENSE.txt"]
+image:https://img.shields.io/travis/gdamore/c-convey/master.svg?label=linux[Linux Status,link="https://travis-ci.org/gdamore/c-convey"]
+image:https://img.shields.io/appveyor/ci/gdamore/c-convey/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/gdamore/c-convey"]
 
 Inspired by the excellent
 https://github.com/smartystreets/goconvey/convey[GoConvey] framework,

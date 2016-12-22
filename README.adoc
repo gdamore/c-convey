@@ -14,7 +14,7 @@ https://github.com/nanomsg/nanomsg[nanomsg].
 Easily Readable & Writeable Tests
 ---------------------------------
 
-image:screenshot_1.png
+image::screenshot_1.png[Convey Example]
 
 Each Convey() block is run on its own, with the entire of Convey's
 in which it is nested restarted from the beginning.  It also has
@@ -24,7 +24,7 @@ between each set.
 Easily Readable Output
 ----------------------
 
-image:screenshot_2.png
+image::screenshot_2.png[Terminal Output]
 
 The output is colored if yout terminal supports it, and tests can include
 extra debugging messages that will be inlined in the log in the appropriate

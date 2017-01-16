@@ -1,6 +1,7 @@
 version: 1.0.{build}
 environment:
   VS_VERSION: 14.0
+  TERM: xterm
 build_script:
   - cmd: IF NOT %VS_VERSION% == NONE call "C:/Program Files (x86)/Microsoft Visual Studio %VS_VERSION%/Common7/Tools/vsvars32.bat"
   - cmd: build.cmd clean

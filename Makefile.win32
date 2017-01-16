@@ -29,7 +29,7 @@ run_tests:	$(PROG)
 	$(PROG) -v
 
 $(PROG):	$(SRCS) $(HDRS)
-	$(CC) $(CFLAGS) -o $@ $(SRCS)
+	$(CC) $(CFLAGS) /Fe:$@ $(SRCS)
 
 clean:
 	$(RM) $(PROG) $(OBJS)

@@ -4,6 +4,7 @@ C Convey Testing Framework
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
 image:https://img.shields.io/travis/gdamore/c-convey/master.svg?label=linux[Linux Status,link="https://travis-ci.org/gdamore/c-convey"]
 image:https://img.shields.io/appveyor/ci/gdamore/c-convey/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/gdamore/c-convey"]
+image:https://api.codacy.com/project/badge/Grade/c8689e4c1fea4f359183fbafcc2c699d["Codacy code quality", link="https://www.codacy.com/app/gdamore/c-convey?utm_source=github.com&utm_medium=referral&utm_content=gdamore/c-convey&utm_campaign=Badge_Grade"]
 
 Inspired by the excellent
 https://github.com/smartystreets/goconvey/convey[GoConvey] framework,

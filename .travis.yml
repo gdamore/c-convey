@@ -4,15 +4,18 @@ matrix:
   include:
     - os: linux
       compiler: gcc
+      env: TEST=test
     - os: linux
       compiler: clang
+      env: TEST=test
     - os: linux
       compiler: gcc
-      env: EXTRA_CFLAGS="-g -O0 -fprofile-arcs -ftest-coverage"
+      env: TEST=coverage
     - os: osx
       compiler: clang
+      env: TEST=test
 script:
   - ./build.sh clean
   - ./build.sh build
-  - ./build.sh test
+  - ./build.sh ${TEST}
   - bash <(curl -s https://codecov.io/bash) -x gcov || echo "Codecov did not collect coverage"

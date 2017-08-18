@@ -123,6 +123,13 @@ Main({
 			}
 			ConveyFail("forced failure");
 		});
+
+		Convey("ConveyError works", {
+			if (ConveyGetEnv("TEST_FAIL") == NULL) {
+				Skip("TEST_FAIL environment not set");
+			}
+			ConveyError("forced error");
+		});
 	});
 
 	/* Override the result variable to reset failure. */

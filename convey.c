@@ -991,15 +991,13 @@ conveyMain(int argc, char **argv)
 {
 	int                 i;
 	const char *        status;
-	const char *        prog;
+	const char *        prog = "<unknown>";
 	struct convey_timer pc;
 	int                 secs, usecs;
 	struct convey_env * env;
 
 	if ((argc > 0) && (argv[0] != NULL)) {
 		prog = argv[0];
-	} else {
-		prog = "<unknown>";
 	}
 
 	/*

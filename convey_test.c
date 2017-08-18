@@ -82,6 +82,16 @@ Main({
 		So(strcmp(buffer, "A1BC1B1D12E12") == 0);
 	});
 
+	Test("Skipping works", {
+		int skipped = 0;
+		SkipConvey("ConveySkip works.", {
+			So(skipped = 0);
+		});
+		Convey("Assertion skipping works.", {
+			SkipSo(skipped == 1);
+		});
+	});
+
 	Test("Reset", {
 		static int x;
 
@@ -101,6 +111,12 @@ Main({
 
 		Convey("But now it did", {
 			So(x == 20);
+		});
+	});
+
+	TestFails("Failure working", {
+		Convey("Injected failure",{
+			So(1 == 0);
 		});
 	});
 })

@@ -4,3 +4,4 @@
 *.obj
 *.o
 convey_test
+convey_test.dSYM

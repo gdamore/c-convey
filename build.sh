@@ -56,12 +56,24 @@ test() {
 	./${PROG} $*
 }
 
+coverage() {
+	${CC} -g -O0 -fprofile-arcs -ftest-coverage ${CFLAGS} -o ${PROG} ${SRCS} ${LDLIBS}
+	./${PROG} $* || exit 1
+	./${PROG} -v || exit 1
+	./${PROG} -d || exit 1
+	./${PROG} -v -d || exit 1
+	./${PROG} -v  || exit 1
+	./${PROG} -v >/dev/null || exit 1
+	./${PROG} -p NAME=VAR
+	env TERM=dumb ./${PROG} -v
+}
+
 clean() {
 	${RM} ${OBJS} ${PROG}
 }
 
 case "$1" in
-build|test|clean)
+build|test|coverage|clean)
 	fn="$1"
 	shift
 	${fn} "$*"

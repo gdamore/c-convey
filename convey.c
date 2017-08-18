@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2017 Garrett D'Amore <garrett@damore.org>
  *
  * This software is supplied under the terms of the MIT License, a
  * copy of which should be located in the distribution where this
@@ -127,6 +127,7 @@ struct convey_ctx {
 	int			ctx_fatal;
 	int			ctx_fail;
 	int			ctx_skip;
+	int			ctx_wantfail;
 	int			ctx_printed;
 	struct convey_timer	ctx_timer;
 	struct convey_log *	ctx_errlog;
@@ -221,7 +222,10 @@ convey_print_result(struct convey_ctx *t)
 			(void) puts("");
 		}
 		convey_log_emit(t->ctx_errlog, "Errors:", convey_red);
-		convey_log_emit(t->ctx_faillog, "Failures:", convey_yellow);
+		if (convey_verbose || !t->ctx_wantfail) {
+			convey_log_emit(t->ctx_faillog, "Failures:",
+				t->ctx_wantfail ? convey_green : convey_yellow);
+		}
 		if (convey_debug) {
 			convey_log_emit(t->ctx_dbglog, "Log:", convey_nocolor);
 		}
@@ -273,7 +277,7 @@ convey_print_result(struct convey_ctx *t)
  * and it should be skipped.  Otherwise, it needs to be done.
  */
 int
-conveyStart(conveyScope *scope, const char *name)
+conveyStart(conveyScope *scope, const char *name, int wantfail)
 {
 	struct convey_ctx *t, *parent;
 
@@ -291,8 +295,15 @@ conveyStart(conveyScope *scope, const char *name)
 		goto allocfail;
 	}
 	t->ctx_jmp = &scope->cs_jmp;
+	t->ctx_wantfail = wantfail;
 
-	(void) snprintf(t->ctx_name, sizeof (t->ctx_name)-1, "%s", name);
+	if (wantfail) {
+		(void) snprintf(t->ctx_name, sizeof (t->ctx_name)-1,
+		    "%s (Fail Expected)", name);
+	} else {
+		(void) snprintf(t->ctx_name, sizeof (t->ctx_name)-1, "%s",
+		    name);
+	}
 	if (parent != NULL) {
 		t->ctx_parent = parent;
 		t->ctx_root = t->ctx_parent->ctx_root;
@@ -399,9 +410,11 @@ conveyFinish(conveyScope *scope, int *rvp)
 		if (t->ctx_fatal) {
 			*rvp = CONVEY_EXIT_FATAL;
 		} else if (t->ctx_fail) {
-			*rvp = CONVEY_EXIT_FAIL;
+			*rvp = t->ctx_wantfail ?
+				CONVEY_EXIT_OK : CONVEY_EXIT_FAIL;
 		} else {
-			*rvp = CONVEY_EXIT_OK;
+			*rvp = t->ctx_wantfail ?
+				CONVEY_EXIT_FAIL : CONVEY_EXIT_OK;
 		}
 	}
 	longjmp(*t->ctx_jmp, 1);
@@ -445,10 +458,11 @@ conveyAssertFail(const char *cond, const char *file, int line)
 	if (t->ctx_root != t) {
 		t->ctx_root->ctx_fail++;
 	}
-	convey_assert_color = convey_yellow;
+	convey_assert_color = t->ctx_wantfail ? convey_green : convey_yellow;
 	t->ctx_fail++;
 	t->ctx_done = 1;        /* This forces an end */
-	convey_logf(t->ctx_faillog, "* %s (Assertion Failed)\n",
+	convey_logf(t->ctx_faillog, "* %s (%s)\n",
+	    t->ctx_wantfail ? "Assertion Failed (ok)" : "Assertion Failed",
 	    t->ctx_name);
 	convey_logf(t->ctx_faillog, "File: %s\n", file);
 	convey_logf(t->ctx_faillog, "Line: %d\n", line);

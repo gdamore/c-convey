@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2017 Garrett D'Amore <garrett@damore.org>
  *
  * This software is supplied under the terms of the MIT License, a
  * copy of which should be located in the distribution where this
@@ -76,7 +76,7 @@ typedef struct {
 } conveyScope;
 
 /* These functions are not for use by tests -- they are used internally. */
-extern int conveyStart(conveyScope *, const char *);
+extern int conveyStart(conveyScope *, const char *, int);
 extern int conveyLoop(conveyScope *, int);
 extern void conveyFinish(conveyScope *, int *);
 extern int conveyMain(int, char **);
@@ -102,7 +102,7 @@ extern void conveyPrintf(const char *, int, const char *, ...);
 		static conveyScope convey_scope;			\
 		int convey_unwind;					\
 		int convey_break = 0;					\
-		if (conveyStart(&convey_scope, convey_name) != 0) {	\
+		if (conveyStart(&convey_scope, convey_name, 0) != 0) {	\
 			break;						\
 		}							\
 		convey_unwind = setjmp(convey_scope.cs_jmp);		\
@@ -118,8 +118,29 @@ extern void conveyPrintf(const char *, int, const char *, ...);
 		conveyFinish(&convey_scope, convey_resultp);		\
 	} while (0);
 
+#define conveyFails(convey_name, convey_code, convey_resultp)		\
+	do {								\
+		static conveyScope convey_scope;			\
+		int convey_unwind;					\
+		int convey_break = 0;					\
+		if (conveyStart(&convey_scope, convey_name, 1) != 0) {	\
+			break;						\
+		}							\
+		convey_unwind = setjmp(convey_scope.cs_jmp);		\
+		if (conveyLoop(&convey_scope, convey_unwind) != 0) {	\
+			break;						\
+		}							\
+		do {							\
+			convey_code					\
+		} while (0);						\
+		if (convey_break) {					\
+			break;						\
+		}							\
+		conveyFinish(&convey_scope, convey_resultp);		\
+} while (0);
+
 /*
- * ConveyRset establishes a reset for the current scope.  This code will
+ * ConveyReset establishes a reset for the current scope.  This code will
  * be executed every time the current scope is unwinding.  This means that
  * the code will be executed each time a child convey exits.  It is also
  * going to be executed once more, for the final pass, which doesn't actually
@@ -188,6 +209,19 @@ extern void conveyPrintf(const char *, int, const char *, ...);
 	do {								\
 		int convey_rv;						\
 		conveyRun(name, code, &convey_rv);			\
+		if (convey_rv > convey_main_rv) {			\
+			convey_main_rv = convey_rv;			\
+		};							\
+	} while (0);
+
+/*
+ * ConveyTestFails indicates that a test instance is expected to fail.
+ * As a result, passing is actually considered an error.
+ */
+#define	ConveyTestFails(name, code)					\
+	do {								\
+		int convey_rv;						\
+		conveyFails(name, code, &convey_rv);			\
 		if (convey_rv > convey_main_rv) {			\
 			convey_main_rv = convey_rv;			\
 		};							\
@@ -270,7 +304,7 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * Further processing in the same context continues.
  */
 #define	ConveySkipAssert(truth)	\
-	conveyAssertSkip(truth, __FILE__, __LINE__)
+	conveyAssertSkip(#truth, __FILE__, __LINE__)
 #define	ConveySkipSo(truth)	ConveySkipAssert(truth)
 
 /*
@@ -279,7 +313,7 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * and the current convey context continues processing.
  */
 #define	ConveySkipConvey(name, code)	\
-	Convey(name, ConveySkip("Skipped"))
+	conveyRun(name, ConveySkip("Skipped");, NULL)
 
 
 /*
@@ -315,6 +349,7 @@ extern void ConveySetVerbose(void);
 
 #define	TestMain	ConveyTestMain
 #define	Test		ConveyTest
+#define	TestFails	ConveyTestFails
 #define	Main		ConveyMain
 #define	So		ConveySo
 #define	Skip		ConveySkip

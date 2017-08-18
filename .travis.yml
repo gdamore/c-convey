@@ -6,9 +6,13 @@ matrix:
       compiler: gcc
     - os: linux
       compiler: clang
+    - os: linux
+      compiler: gcc
+      env: EXTRA_CFLAGS="-g -O0 -fprofile-arcs -ftest-coverage"
     - os: osx
       compiler: clang
 script:
   - ./build.sh clean
   - ./build.sh build
   - ./build.sh test
+  - bash <(curl -s https://codecov.io/bash) -x gcov || echo "Codecov did not collect coverage"

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2016 Garrett D'Amore <garrett@damore.org>
+# Copyright 2017 Garrett D'Amore <garrett@damore.org>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -25,7 +25,7 @@ OBJS="convey_test.o convey.o"
 
 CC=${CC:-cc}
 RM="${RM:-rm -f}"
-CFLAGS="${CFLAGS:- -I .}"
+CFLAGS="${CFLAGS:- -I .} ${EXTRA_CFLAGS}"
 
 case ${UNAME:-`uname`} in
 Linux)

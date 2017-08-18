@@ -1,0 +1,6 @@
+*.exe
+*.gcno
+*.gcda
+*.obj
+*.o
+convey_test

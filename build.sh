@@ -63,8 +63,8 @@ coverage() {
 	./${PROG} -d || exit 1
 	./${PROG} -v -d || exit 1
 	./${PROG} -v  || exit 1
-	./${PROG} -v >/dev/null || exit 1
-	./${PROG} -p NAME=VAR
+	./${PROG} -v < /dev/null || exit 1
+	./${PROG} -p ENVTEST=ON -p ANOTHERNAME -p AGAIN=YES barearg
 	env TERM=dumb ./${PROG} -v
 }
 

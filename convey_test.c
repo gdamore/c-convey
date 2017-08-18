@@ -114,9 +114,35 @@ Main({
 		});
 	});
 
-	TestFails("Failure working", {
+	TestFails("Assertion Failure works", {
 		Convey("Injected failure",{
 			So(1 == 0);
 		});
 	});
+
+	TestFails("ConveyFail works", {
+		ConveyFail("forced failure");
+	});
+
+	Test("Environment works", {
+		Convey("PATH environment", {
+			So(ConveyGetEnv("PATH") != NULL);
+			So(strlen(ConveyGetEnv("PATH")) != 0);
+		});
+		Convey("Command line args work", {
+			char *v1 = ConveyGetEnv("ANOTHERNAME");
+			char *v2 = ConveyGetEnv("AGAIN");
+			if (ConveyGetEnv("NAMETEST") == NULL) {
+				SkipSo(v1 != NULL);
+				SkipSo(v2 != NULL);
+				SkipSo(strcmp(v1, "") == 0);
+				SkipSo(strcmp(v2, "YES") == 0);
+			} else {
+				So(v1 != NULL);
+				So(v2 != NULL);
+				So(strcmp(v1, "") == 0);
+				So(strcmp(v2, "YES") == 0);
+			}
+		})
+	})
 })

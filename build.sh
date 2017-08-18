@@ -64,8 +64,9 @@ coverage() {
 	./${PROG} -v -d || exit 1
 	./${PROG} -v  || exit 1
 	./${PROG} -v < /dev/null || exit 1
-	./${PROG} -p ENVTEST=ON -p ANOTHERNAME -p AGAIN=YES barearg
-	env TERM=dumb ./${PROG} -v
+	./${PROG} -v -p TEST_FAIL || exit 1
+	./${PROG} -p ENVTEST=ON -p ANOTHERNAME -p AGAIN=YES barearg || exit 1
+	env TERM=dumb ./${PROG} -v || exit 1
 }
 
 clean() {

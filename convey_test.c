@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2017 Garrett D'Amore <garrett@damore.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"),
@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 Main({
 
 	/*
@@ -49,7 +48,7 @@ Main({
 		 * Note that it starts zeroed (C standard).
 		 */
 		static char buffer[32];
-		static int bufidx;
+		static int  bufidx;
 
 		Convey("A runs first", { buffer[bufidx++] = 'A'; });
 		Printf("Bufidx is now %d", 1);
@@ -58,24 +57,24 @@ Main({
 		Convey("B runs after A", {
 
 			So(strlen(buffer) > 0);
-			So(buffer[bufidx-1] == '1');
+			So(buffer[bufidx - 1] == '1');
 			buffer[bufidx++] = 'B';
 
 			Convey("C runs inside B", {
-				So(buffer[bufidx-1] == 'B');
+				So(buffer[bufidx - 1] == 'B');
 				buffer[bufidx++] = 'C';
 			});
 		});
 
 		Convey("D runs afer A, B, C.", {
-			So(buffer[bufidx-1] == '1');
+			So(buffer[bufidx - 1] == '1');
 			buffer[bufidx++] = 'D';
 		});
 
 		buffer[bufidx++] = '2';
 
 		Convey("E is last", {
-			So(buffer[bufidx-1] == '2');
+			So(buffer[bufidx - 1] == '2');
 			buffer[bufidx++] = 'E';
 		});
 
@@ -84,12 +83,8 @@ Main({
 
 	Test("Skipping works", {
 		int skipped = 0;
-		SkipConvey("ConveySkip works.", {
-			So(skipped = 0);
-		});
-		Convey("Assertion skipping works.", {
-			SkipSo(skipped == 1);
-		});
+		SkipConvey("ConveySkip works.", { So(skipped = 0); });
+		Convey("Assertion skipping works.", { SkipSo(skipped == 1); });
 	});
 
 	Test("Reset", {
@@ -109,20 +104,29 @@ Main({
 			So(x == 5);
 		});
 
-		Convey("But now it did", {
-			So(x == 20);
+		Convey("But now it did", { So(x == 20); });
+	});
+
+	/* save the current status so we can override */
+	int oldrv = convey_main_rv;
+	Test("Failures work", {
+		Convey("Assertion failure works", {
+			if (ConveyGetEnv("TEST_FAIL") == NULL) {
+				Skip("TEST_FAIL environment not set");
+			}
+			Convey("Injected failure", { So(1 == 0); });
+		});
+
+		Convey("ConveyFail works", {
+			if (ConveyGetEnv("TEST_FAIL") == NULL) {
+				Skip("TEST_FAIL environment not set");
+			}
+			ConveyFail("forced failure");
 		});
 	});
 
-	TestFails("Assertion Failure works", {
-		Convey("Injected failure",{
-			So(1 == 0);
-		});
-	});
-
-	TestFails("ConveyFail works", {
-		ConveyFail("forced failure");
-	});
+	/* Override the result variable to reset failure. */
+	convey_main_rv = oldrv;
 
 	Test("Environment works", {
 		Convey("PATH environment", {
@@ -144,5 +148,5 @@ Main({
 				So(strcmp(v2, "YES") == 0);
 			}
 		})
-	})
+	});
 })

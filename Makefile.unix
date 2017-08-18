@@ -47,4 +47,4 @@ $(PROG):	$(SRCS) $(HDRS)
 	$(CC) $(CFLAGS) -o $@ $(SRCS) $(LDLIBS)
 
 clean:
-	$(RM) $(PROG) $(OBJS)
+	$(RM) $(PROG) $(OBJS) *.gcda *.gcno
